@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فحص الروابط الملغومة | أحمد اليماني</title>
+    <!-- Font Awesome 6 (مجاني) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts - خط عربي أنيق -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 20%, #1a1a2e, #0a0a0f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            padding: 15px;
+        }
+
+        /* خلفية متحركة بنجوم ذهبية */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1.5" fill="%23ffd966" opacity="0.4"/><circle cx="80" cy="30" r="1" fill="%23ffd966" opacity="0.3"/><circle cx="45" cy="85" r="2" fill="%23ffd966" opacity="0.5"/><circle cx="92" cy="70" r="1.2" fill="%23ffd966" opacity="0.4"/><circle cx="8" cy="60" r="1.8" fill="%23ffd966" opacity="0.6"/><circle cx="30" cy="45" r="1" fill="%23ffd966" opacity="0.2"/></svg>');
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* الطبقة الزجاجية الرئيسية */
+        .glass-panel {
+            width: 100%;
+            max-width: 700px;
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 50px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(255, 215, 0, 0.1) inset, 0 0 30px rgba(255, 215, 0, 0.2);
+            padding: 40px 30px;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(255, 215, 0, 0.2) inset, 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        /* العنوان الرئيسي */
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title h1 {
+            font-size: 3.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff8e7, #ffd966, #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .title .sub {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-weight: 300;
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.5);
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+
+        /* مربع الإدخال */
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .url-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .url-input-wrapper i {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ffd966;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px gold;
+            z-index: 2;
+        }
+
+        #urlInput {
+            width: 100%;
+            padding: 20px 60px 20px 25px;
+            background: rgba(10, 10, 20, 0.7);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 60px;
+            outline: none;
+            font-size: 1.2rem;
+            color: #fff;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
+        }
+
+        #urlInput::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 300;
+            font-size: 1rem;
+        }
+
+        #urlInput:focus {
+            border-color: #ffd966;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.7);
+            background: rgba(20, 20, 30, 0.9);
+        }
+
+        /* زر الفحص */
+        .check-btn {
+            background: linear-gradient(145deg, #b8860b, #ffd966, #f0b400);
+            border: none;
+            padding: 18px 40px;
+            border-radius: 60px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0a0a0f;
+            cursor: pointer;
+            box-shadow: 0 15px 30px rgba(184, 134, 11, 0.5), 0 0 20px rgba(255, 215, 0, 0.6);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .check-btn i {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 5px black);
+        }
+
+        .check-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(184, 134, 11, 0.7), 0 0 40px gold;
+            background: linear-gradient(145deg, #ffd966, #fcc201, #b8860b);
+        }
+
+        .check-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* منطقة النتيجة */
+        .result-area {
+            margin: 30px 0 20px;
+            min-height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 40px;
+            padding: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.7), 0 10px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.5s;
+        }
+
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 15px currentColor);
+        }
+
+        .result-text {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .result-desc {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 300;
+        }
+
+        .safe {
+            color: #2ecc71;
+            text-shadow: 0 0 20px #2ecc71;
+        }
+
+        .malicious {
+            color: #e74c3c;
+            text-shadow: 0 0 20px #e74c3c;
+        }
+
+        .unknown {
+            color: #f39c12;
+            text-shadow: 0 0 20px #f39c12;
+        }
+
+        /* شريط الإحصائيات الوهمية */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0 20px;
+            padding: 15px 5px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 80px;
+            border: 1px solid rgba(255,215,0,0.1);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #ffd966;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* توقيع الحقوق */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.2rem;
+            font-weight: 300;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+            padding-top: 25px;
+        }
+
+        .footer .name {
+            color: #ffd966;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px gold;
+            letter-spacing: 2px;
+        }
+
+        .footer i {
+            color: #e74c3c;
+            margin: 0 5px;
+        }
+
+        /* مؤشر التحميل */
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,215,0,0.2);
+            border-top: 5px solid #ffd966;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* تجاوب للجوال */
+        @media (max-width: 600px) {
+            .glass-panel {
+                padding: 30px 20px;
+                border-radius: 40px;
+            }
+            .title h1 {
+                font-size: 2.2rem;
+            }
+            .check-btn {
+                font-size: 1.5rem;
+                padding: 15px;
+            }
+            .result-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-panel">
+        <div class="title">
+            <h1>⚠️ فحص الروابط الملغومة</h1>
+            <div class="sub">التأكد من سلامة الروابط قبل النقر</div>
+        </div>
+
+        <div class="input-container">
+            <div class="url-input-wrapper">
+                <i class="fas fa-link"></i>
+                <input type="url" id="urlInput" placeholder="https://example.com" value="https://">
+            </div>
+            <button class="check-btn" id="checkBtn"><i class="fas fa-shield-hal"></i> افحص الرابط</button>
+        </div>
+
+        <!-- منطقة عرض النتيجة -->
+        <div class="result-area" id="resultArea">
+            <div class="result-content" id="resultContent">
+                <i class="fas fa-shield-virus result-icon unknown" id="resultIcon"></i>
+                <div class="result-text unknown" id="resultText">أدخل رابطاً للفحص</div>
+                <div class="result-desc" id="resultDesc">سيتحقق النظام من سلامة الرابط</div>
+            </div>
+        </div>
+
+        <!-- إحصائيات توحي بالاحترافية (تحديث وهمي) -->
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="scannedCount">1,284</span>
+                <span class="stat-label">رابط تم فحصه</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="maliciousCount">342</span>
+                <span class="stat-label">ملغوم</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="safeCount">942</span>
+                <span class="stat-label">آمن</span>
+            </div>
+        </div>
+
+        <!-- التوقيع -->
+        <div class="footer">
+            <i class="fas fa-crown" style="color: #ffd966;"></i> جميع الحقوق محفوظة <span class="name">أحمد اليماني</span> <i class="fas fa-crown" style="color: #ffd966;"></i><br>
+            <span style="font-size: 0.9rem;">© 2025 | تصميم فخم بتقنيات الحماية</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // قائمة سوداء تجريبية (روابط مفخخة وهمية)
+            const blacklist = [
+                'malicious-site.com',
+                'evil.ru',
+                'phishing.net',
+                'spam-link.org',
+                'hackers.biz',
+                'fakelogin.xyz',
+                'trojan.download',
+                'virus-spread.info',
+                'badlink.co',
+                'steal-data.com'
+            ];
+
+            // عناصر DOM
+            const urlInput = document.getElementById('urlInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const resultArea = document.getElementById('resultArea');
+            const resultContent = document.getElementById('resultContent');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultText = document.getElementById('resultText');
+            const resultDesc = document.getElementById('resultDesc');
+
+            // عناصر الإحصائيات
+            const scannedSpan = document.getElementById('scannedCount');
+            const maliciousSpan = document.getElementById('maliciousCount');
+            const safeSpan = document.getElementById('safeCount');
+
+            // إحصائيات أولية (تتغير مع كل فحص)
+            let scanned = 1284;
+            let malicious = 342;
+            let safe = 942;
+
+            // دالة تحديث الإحصائيات
+            function updateStats(isMal) {
+                scanned++;
+                if (isMal) {
+                    malicious++;
+                } else {
+                    safe++;
+                }
+                scannedSpan.textContent = scanned.toLocaleString();
+                maliciousSpan.textContent = malicious.toLocaleString();
+                safeSpan.textContent = safe.toLocaleString();
+            }
+
+            // دالة عرض النتيجة
+            function displayResult(status, message, detail, iconClass) {
+                // إزالة أي classes سابقة
+                resultIcon.className = `result-icon ${status}`;
+                resultText.className = `result-text ${status}`;
+
+                resultIcon.className = `result-icon ${status} fas ${iconClass}`;
+                resultText.textContent = message;
+                resultDesc.textContent = detail;
+            }
+
+            // دالة استخراج النطاق من الرابط
+            function extractDomain(url) {
+                try {
+                    // إذا لم يبدأ ببروتوكول نضيف http:// افتراضياً
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'http://' + url;
+                    }
+                    const hostname = new URL(url).hostname.replace('www.', '');
+                    return hostname;
+                } catch (e) {
+                    return null; // رابط غير صالح
+                }
+            }
+
+            // دالة التحقق من كون الرابط في القائمة السوداء
+            function isBlacklisted(domain) {
+                if (!domain) return false;
+                const lowerDomain = domain.toLowerCase();
+                return blacklist.some(bad => lowerDomain.includes(bad));
+            }
+
+            // وظيفة الفحص (تحاكي طلب إلى سيرفر)
+            function checkLink() {
+                let rawUrl = urlInput.value.trim();
+                if (rawUrl === '') {
+                    displayResult('unknown', 'الحقل فارغ', 'أدخل رابطاً صحيحاً', 'fa-exclamation-triangle');
+                    return;
+                }
+
+                // إظهار مؤشر التحميل
+                const originalContent = resultContent.innerHTML;
+                resultContent.innerHTML = '<div class="loader"></div>';
+
+                // محاكاة تأخير الشبكة (500-1500 مللي)
+                setTimeout(() => {
+                    // استخراج النطاق
+                    const domain = extractDomain(rawUrl);
+                    if (!domain) {
+                        // رابط غير صالح
+                        resultContent.innerHTML = originalContent; // إعادة المحتوى
+                        displayResult('unknown', 'رابط غير صالح', 'تأكد من كتابة الرابط بشكل صحيح', 'fa-unlink');
+                        return;
+                    }
+
+                    // التحقق من القائمة السوداء
+                    const maliciousDetected = isBlacklisted(domain);
+
+                    // تحديث الإحصائيات
+                    updateStats(maliciousDetected);
+
+                    // إعادة بناء المحتوى الأصلي (لأن loader أزاله)
+                    resultContent.innerHTML = `
+                        <i class="result-icon" id="resultIcon"></i>
+                        <div class="result-text" id="resultText"></div>
+                        <div class="result-desc" id="resultDesc"></div>
+                    `;
+                    // إعادة ربط المتغيرات بالعناصر الجديدة
+                    const newResultIcon = document.getElementById('resultIcon');
+                    const newResultText = document.getElementById('resultText');
+                    const newResultDesc = document.getElementById('resultDesc');
+
+                    if (maliciousDetected) {
+                        // رابط ملغوم
+                        newResultIcon.className = 'result-icon malicious fas fa-bomb';
+                        newResultText.className = 'result-text malicious';
+                        newResultText.textContent = '⚠️ رابط ملغوم!';
+                        newResultDesc.textContent = `هذا الرابط (${domain}) مدرج في قاعدة بيانات الروابط الضارة.`;
+                    } else {
+                        // رابط آمن (افتراضياً)
+                        newResultIcon.className = 'result-icon safe fas fa-shield-check';
+                        newResultText.className = 'result-text safe';
+                        newResultText.textContent = '✓ الرابط آمن';
+                        newResultDesc.textContent = `لم يتم العثور على تهديدات في (${domain}). يبقى الحذر واجباً.`;
+                    }
+
+                    // إعادة تعيين المتغيرات للإشارة إلى العناصر الجديدة
+                    // (للاستخدام المستقبلي لكننا نستخدم المعرفات)
+                    // ليس ضرورياً طالما كل عنصر له id.
+
+                }, Math.random() * 600 + 400); // تأخير عشوائي
+            }
+
+            // الأحداث
+            checkBtn.addEventListener('click', checkLink);
+            urlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    checkLink();
+                }
+            });
+
+            // تحديث أولي للاحصائيات
+            scannedSpan.textContent = scanned.toLocaleString();
+            maliciousSpan.textContent = malicious.toLocaleString();
+            safeSpan.textContent = safe.toLocaleString();
+
+            // إضافة مثال تلقائي (اختياري)
+            urlInput.addEventListener('focus', function() {
+                if (this.value === 'https://') {
+                    this.value = '';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
